@@ -1,5 +1,5 @@
 // Garde l'app disponible même sans internet.
-const CACHE = "livres-v1";
+const CACHE = "livres-v2";
 const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {

@@ -98,7 +98,7 @@ textarea { min-height: 96px; resize: vertical; }
 .shelf { display: flex; align-items: flex-end; gap: 3px; padding: 0 4px; border-bottom: 9px solid var(--shelf); border-radius: 0 0 4px 4px; min-height: 130px; }
 .spine { flex: none; border: 0; padding: 6px 0; cursor: pointer; color: #fff; border-radius: 3px 3px 0 0; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; box-shadow: inset -2px 0 0 rgba(0, 0, 0, 0.18); }
 .spine span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.03em; max-height: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.spine.empty-slot { background: transparent; border: 1.5px solid var(--line); box-shadow: none; cursor: default; }
+.spine.empty-slot { background: color-mix(in srgb, var(--c) 28%, transparent); border: 1.5px solid color-mix(in srgb, var(--c) 55%, transparent); box-shadow: none; cursor: default; }
 .legend { color: var(--muted); font-size: 0.9rem; margin: 0; }
 
 /* Défi */
@@ -359,7 +359,7 @@ textarea { min-height: 96px; resize: vertical; }
     }
     var avail = Math.max(200, main.clientWidth - 8 || ($("view").clientWidth - 8));
     var wrap = h("div", { class: "shelves" });
-    var shelf = null, used = 0;
+    var shelf = null, used = 0, emptyIdx = 0;
     slots.forEach(function (s) {
       if (!shelf || used + s.w + 3 > avail) { shelf = h("div", { class: "shelf" }); wrap.appendChild(shelf); used = 0; }
       used += s.w + 3;
@@ -367,7 +367,7 @@ textarea { min-height: 96px; resize: vertical; }
       if (s.book) {
         el = h("button", { class: "spine", type: "button", title: s.book.title, "aria-label": s.book.title, style: "width:" + s.w + "px;height:" + s.h + "px;background:" + (s.book.color || PALETTE[0]), onclick: function () { openEditor(s.book); } }, [h("span", { text: s.book.title })]);
       } else {
-        el = h("div", { class: "spine empty-slot", "aria-hidden": "true", style: "width:" + s.w + "px;height:" + s.h + "px" });
+        el = h("div", { class: "spine empty-slot", "aria-hidden": "true", style: "width:" + s.w + "px;height:" + s.h + "px;--c:" + PALETTE[(emptyIdx++) % PALETTE.length] });
       }
       shelf.appendChild(el);
     });
