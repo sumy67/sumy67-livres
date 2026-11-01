@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
-<title>Sumy Livres — Mon journal de lecture</title>
+<title>Sumy Livres — Ta bibliothèque, tes défis, ta passion</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=Caveat:wght@500;600&display=swap');
 :root{--forest:#173d30;--forest2:#245542;--cream:#f7f0e5;--paper:#fffaf1;--ink:#202820;--muted:#77756a;--orange:#e95b16;--orange2:#f7d5bd;--line:#e8dccb;--sage:#dce4d4;--shadow:0 12px 30px rgba(45,38,27,.09);--serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif;--hand:'Caveat',cursive}
@@ -30,6 +30,70 @@
 .footer-note{text-align:center;color:var(--muted);font-size:.75rem;padding:25px 0 4px}
 @media(min-width:650px){.app{padding:24px 28px 40px}.hero{min-height:315px}.book-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px 15px}.bottom-nav{border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0}.modal-backdrop{align-items:center}}
 @media(max-width:390px){.app{padding:12px 13px 24px}.hero{min-height:240px;padding:19px 17px}.hero-art{width:45%}.book-stack{height:36px;font-size:.85rem}.leaf{font-size:2.8rem}.mug{width:60px;height:49px;line-height:40px;margin-right:35px}.cards{gap:9px}.action-card{padding:13px;min-height:105px}.book-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px 9px}.form-grid{grid-template-columns:1fr}}
+
+/* SUMY LIVRES 3.0 — illustrated editorial redesign */
+:root{--cream:#f7efe2;--paper:#fff8ed;--ink:#202820;--forest:#173b2d;--forest2:#285641;--orange:#ed5b12;--line:#e9d9c4;--muted:#81796e;--shadow:0 9px 24px rgba(52,39,24,.09)}
+body{background:radial-gradient(ellipse at 20% 0%,#fffaf1 0%,var(--cream) 54%,#f1e5d4 100%);background-attachment:fixed}
+.app{max-width:680px;padding-top:15px}
+.topline{margin-bottom:17px}
+.brand{font-family:var(--serif);font-size:1.3rem;letter-spacing:-.02em}
+.brand-mark{background:var(--forest);border:2px solid #e7d6bd;box-shadow:0 3px 8px #463b2d18}
+.icon-btn{background:#fff9ef;border-color:#eadbc7;box-shadow:0 3px 9px #3b302014}
+.hero{min-height:320px;border-radius:25px 25px 17px 17px;background:radial-gradient(circle at 85% 15%,#315d46 0%,transparent 38%),linear-gradient(125deg,#123527,#1d4936 65%,#173b2d);padding:24px 23px;box-shadow:0 14px 28px #183c2c30}
+.hero:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 18% 90%,#ffffff0d 0 1px,transparent 2px);background-size:19px 19px;opacity:.5}
+.hero-copy{width:53%;z-index:3}
+.hand{font-size:1.75rem;color:#f4d6b5;margin-bottom:25px}
+.hero-date{font-size:1rem;color:#e8ddca}
+.clock{font-size:clamp(4.2rem,15vw,6rem);font-weight:500;color:#fff4e3;letter-spacing:-.075em;text-shadow:0 3px 15px #071b13}
+.hero-line{font-size:1.06rem;color:#f0dfca;max-width:230px}
+.hero-art{right:0;width:49%;height:100%;padding:10px 10px 18px 0;justify-content:flex-end}
+.flower-art{position:absolute;right:8px;top:2px;width:45%;height:58%;filter:drop-shadow(0 3px 2px #10291f55)}
+.hero-books{position:relative;z-index:2;width:100%;max-width:205px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-top:auto}
+.hero-book{height:39px;width:100%;display:grid;place-items:center;border:2px solid #57402e;box-shadow:0 5px 7px #0c201955;font:600 1.08rem var(--serif);transform:skewY(-3deg)}
+.hero-book.orange{background:#ed651c;color:#29251d}
+.hero-book.cream{background:#f6e7d2;color:#29362d;width:92%}
+.hero-book.dark{background:#29352d;color:#f6e7d2;width:84%}
+.hero-book.wide{height:18px;width:94%;margin-top:1px}
+.hero-mug{position:absolute;z-index:3;right:43%;bottom:18px;width:57px;height:49px;border-radius:7px 7px 16px 16px;background:#ed5b12;border:4px solid #c74a13;display:grid;place-items:center;color:#202820;font-size:1.7rem;box-shadow:0 5px 8px #10291f66}
+.hero-doodle{position:absolute;left:48%;top:37%;font-size:1.2rem;color:#ed8b4e}
+.greeting{margin:22px 4px 15px}
+.greeting h1{font-size:1.9rem}
+.greeting p{font-size:.92rem}
+.cards{gap:11px}
+.action-card{border-radius:19px 23px 18px 22px;background:linear-gradient(145deg,#fffaf2,#f9f0e3);border-color:#eadbc8;box-shadow:0 6px 15px #45372512;min-height:116px;padding:15px}
+.action-icon{border-radius:50%;width:45px;height:45px;background:#f8dfc8;font-size:1.5rem}
+.action-card:nth-child(2) .action-icon{background:#e1e8d9}
+.action-card:nth-child(3) .action-icon{background:#f5d4b9}
+.action-card:nth-child(4) .action-icon{background:#e9e3d4}
+.action-card strong{font-size:1.13rem}
+.feature-card{border-radius:19px 25px 20px 24px;background:linear-gradient(110deg,#fff9ef,#f2e2cc);border:1px solid #eadbc7;box-shadow:0 6px 14px #493b2a12;padding:15px 16px}
+.feature-card .round{background:#f5d7bc;color:#1d3e2f}
+.feature-card:nth-of-type(2n) .round{background:#dfe7d8}
+.feature-card strong{font-size:1.18rem}
+.progress{background:#e3d4bd;height:8px}
+.progress i{background:linear-gradient(90deg,#e95b16,#f18a40)}
+.section-head h2{font-size:1.45rem}
+.book-card{background:#fff9f0;border:1px solid #eadbc7;border-radius:15px;padding:7px;box-shadow:0 5px 12px #493b2a0d}
+.cover{border-radius:9px 11px 11px 8px;box-shadow:3px 5px 9px #44362622}
+.book-name{padding:0 2px;font-size:.92rem}
+.book-author,.book-status{padding:0 2px}
+.page-title{font-size:2.1rem}
+.filter{background:#fff8ed;border-color:#eadbc7}
+.filter.active{background:var(--orange);border-color:var(--orange)}
+.primary{background:var(--orange);box-shadow:0 5px 13px #e95b1633}
+.bottom-nav{background:#fffaf1ed;border-top:1px solid #e8d9c6;box-shadow:0 -6px 22px #5a4a3410;backdrop-filter:blur(18px)}
+.nav-btn{font-size:.69rem}
+.nav-btn .ico{font-size:1.42rem}
+.nav-btn.active{color:var(--orange)}
+.shelf-card{border-radius:18px;background:#fff9ef;border-color:#eadbc7;box-shadow:0 6px 14px #493b2a10}
+.shelf-art{background:linear-gradient(140deg,#173b2d,#2c5a43)}
+.shelf-card:nth-child(2n) .shelf-art{background:linear-gradient(140deg,#b95b31,#e4a176)}
+.shelf-card:nth-child(3n) .shelf-art{background:linear-gradient(140deg,#657b60,#a8b092)}
+.goal-box{background:radial-gradient(circle at 90% 0%,#2f6047,#173b2d 60%);border:1px solid #315d46;box-shadow:0 9px 20px #173b2d24}
+.stat{background:#fff9ef;border-color:#eadbc7;box-shadow:0 5px 12px #493b2a0d}
+.stat b{color:var(--forest)}
+@media(max-width:430px){.hero{min-height:270px;padding:20px 17px}.hero-copy{width:54%}.hero-art{width:47%;padding-right:4px}.hero-book{height:34px;font-size:.93rem}.hero-mug{right:41%;width:50px;height:43px}.flower-art{width:47%;height:52%}.hand{font-size:1.5rem;margin-bottom:20px}.clock{font-size:3.9rem}.hero-line{font-size:.93rem}.greeting h1{font-size:1.65rem}.action-card{min-height:108px;padding:12px}.action-card strong{font-size:1rem}}
+
 </style>
 </head>
 <body>
@@ -102,7 +166,7 @@ function finishedYear(b){return (b.finished||b.updated||b.created||today()).slic
 function booksDoneThisYear(){return state.books.filter(b=>b.status==="termine"&&finishedYear(b)===String(new Date().getFullYear()))}
 function coverHTML(b){if(b.cover)return `<div class="cover"><img src="${esc(b.cover)}" alt="Couverture de ${esc(b.title)}" loading="lazy" onerror="this.remove()"></div>`;return `<div class="cover" style="background:${esc(b.color||"#315b49")}"><span>${esc(b.title)}</span></div>`}
 function bookTile(b){return `<button class="book-card" data-edit="${esc(b.id)}">${coverHTML(b)}<span class="book-name">${esc(b.title)}</span><span class="book-author">${esc(b.author||"Auteur inconnu")}</span><span class="book-status">${statusLabel(b.status)}${b.rating?` · ${"★".repeat(b.rating)}`:""}</span></button>`}
-function hero(){const d=new Date();const days=["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];const months=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];return `<section class="hero"><div class="hero-copy"><p class="hand">Bonne lecture ! ♡</p><p class="hero-date">${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}</p><h1 class="clock" id="clock">${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}</h1><p class="hero-line">Une histoire après l’autre.</p></div><div class="hero-art" aria-hidden="true"><div class="leaf">❧</div><div class="book-stack">Dream Big</div><div class="book-stack">Read More</div><div class="book-stack">Be Happy ♡</div><div class="mug">♡</div></div></section>`}
+function hero(){const d=new Date();const days=["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];const months=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];return `<section class="hero"><div class="hero-copy"><p class="hand">Bonne lecture ! ♡</p><p class="hero-date">${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}</p><h1 class="clock" id="clock">${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}</h1><p class="hero-line">Ta bibliothèque, tes rêves, tes histoires.</p></div><div class="hero-art" aria-hidden="true"><svg class="flower-art" viewBox="0 0 170 220" fill="none"><path d="M83 212C82 154 76 103 46 49M82 211C91 146 113 99 132 53M82 211C66 158 36 132 20 112" stroke="#b9c8a9" stroke-width="4" stroke-linecap="round"/><path d="M47 51c-23-20-39-3-28 12 11 15 27 4 28-12ZM47 51c-3-26 18-31 23-14 5 17-10 25-23 14ZM132 54c-20-21-38-8-29 9 9 17 25 10 29-9ZM132 54c4-25 26-27 27-8 1 18-16 23-27 8ZM20 113c-18-17-32-3-22 10 10 13 22 5 22-10Z" fill="#f3e7d1" stroke="#d7a16e" stroke-width="2"/><path d="M84 211c-14-30-29-31-39-17 9 18 24 22 39 17ZM83 183c17-29 34-25 38-9-13 17-25 20-38 9ZM47 143c-22-17-34-5-26 10 13 12 24 5 26-10Z" fill="#7f9876"/></svg><div class="hero-books"><div class="hero-book orange">Dream Big</div><div class="hero-book cream">Read More</div><div class="hero-book dark">Be Happy ♡</div><div class="hero-book orange wide"></div></div><div class="hero-mug">♡</div></div><span class="hero-doodle">✦</span></section>`}
 function renderHome(){const current=state.books.find(b=>b.status==="encours");const done=booksDoneThisYear().length;const goal=Number(state.goal)||24;const pct=Math.min(100,Math.round(done/goal*100));return `${hero()}<section class="greeting"><h1>Bonjour ${esc(state.name||"lectrice")} ♡</h1><p>Prête pour un nouveau chapitre ?</p></section><div class="cards"><button class="action-card" data-go="library"><span class="action-icon">📖</span><strong>Ma bibliothèque</strong><small>${state.books.length} livre${state.books.length>1?"s":""}</small></button><button class="action-card" data-go="shelves"><span class="action-icon">📚</span><strong>Mes étagères</strong><small>Mes livres par envie</small></button><button class="action-card" data-go="challenges"><span class="action-icon">🏆</span><strong>Mes défis</strong><small>${done} / ${goal} livres cette année</small></button><button class="action-card" data-go="stats"><span class="action-icon">✦</span><strong>Mes statistiques</strong><small>Mon année en lecture</small></button></div><div class="feature-card"><div class="round">☕</div><div><span class="eyebrow">Ma lecture en cours</span><strong>${current?esc(current.title):"Le prochain chapitre t’attend"}</strong><p>${current?esc(current.author||"Une belle histoire à poursuivre"):"Ajoute un livre et commence ton aventure."}</p>${current&&current.pages?`<div class="progress"><i style="width:${Math.min(100,Math.round((current.pagesRead||0)/current.pages*100))}%"></i></div>`:""}</div></div><div class="feature-card"><div class="round">🌿</div><div style="flex:1"><span class="eyebrow">Mon objectif ${new Date().getFullYear()}</span><strong>${done} / ${goal} livres lus</strong><div class="progress"><i style="width:${pct}%"></i></div></div></div><div class="section-head"><h2>Mes dernières lectures</h2><button class="text-btn" data-go="library">Tout voir →</button></div>${state.books.length?`<div class="book-grid">${state.books.slice().sort((a,b)=>(b.updated||"").localeCompare(a.updated||"")).slice(0,3).map(bookTile).join("")}</div>`:`<div class="empty"><div class="big">📚</div>Ta bibliothèque commence ici.<br><button class="primary" style="margin-top:14px" data-action="add">＋ Ajouter mon premier livre</button></div>`}`}
 function renderLibrary(){const shown=state.books.filter(b=>(filter==="all"||b.status===filter)&&(!searchText||(b.title+" "+(b.author||"")).toLowerCase().includes(searchText)));return `<h1 class="page-title">Ma bibliothèque</h1><p class="page-sub">${state.books.length} livre${state.books.length>1?"s":""} dans mon petit univers</p><div class="toolbar"><input class="search" id="searchBooks" type="search" placeholder="⌕ Chercher un titre ou un auteur…" value="${esc(searchText)}"><button class="primary" data-action="add">＋ Ajouter</button></div><div class="filter-row">${[["all","Tous"],["alire","À lire"],["encours","En cours"],["termine","Lus"]].map(([v,l])=>`<button class="filter ${filter===v?"active":""}" data-filter="${v}">${l}</button>`).join("")}</div>${shown.length?`<div class="book-grid">${shown.map(bookTile).join("")}</div>`:`<div class="empty"><div class="big">🍊</div>${state.books.length?"Aucun livre ne correspond à ta recherche.":"Ta bibliothèque est encore vide."}<br><button class="primary" style="margin-top:14px" data-action="add">＋ Ajouter un livre</button></div>`}`}
 const shelves=[["À découvrir","✨","alire"],["En cours","☕","encours"],["Coups de cœur","♡","fav"],["Fantasy","🌙","Fantasy"],["Romance","🌷","Romance"],["Policier","🔎","Policier"],["Développement personnel","🌱","Développement personnel"],["Classiques","📜","Classiques"],["Autres","📚","Autres"]];
