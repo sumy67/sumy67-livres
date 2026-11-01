@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Journal de lecture</title>
+<meta name="theme-color" content="#fbf7ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Lectures">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Jost:wght@400;500;600&display=swap">
+<style>
+/* Disposition : une colonne étroite, comme une page de journal.
+   Trois vues (bibliothèque, étagère, défi) choisies avec la barre du bas. La fiche d'un livre s'ouvre en plein écran. */
+:root {
+  --bg: #fbf7ef;
+  --paper: #ffffff;
+  --fg: #2b2926;
+  --muted: #7a746a;
+  --line: #e5ddcf;
+  --accent: #c8553c;
+  --accent-fg: #ffffff;
+  --star: #d9922b;
+  --star-off: #e6dccb;
+  --shelf: #b9a68a;
+  --danger: #b3261e;
+  --shadow: 0 6px 18px rgba(80, 60, 30, 0.14);
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Jost", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1916; --paper: #25221e; --fg: #f1ece3; --muted: #a39b8d; --line: #3a352e;
+    --accent: #e57d63; --accent-fg: #1b1916; --star: #e8a84a; --star-off: #403a31; --shelf: #6e6252;
+    --danger: #ff9a8f; --shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: 120px;
+}
+button { font: inherit; color: inherit; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; margin: 0; line-height: 1.1; text-wrap: balance; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.app { max-width: 560px; margin: 0 auto; padding-top: 22px; display: flex; flex-direction: column; gap: 16px; }
+.kicker { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+.top h1 { font-size: 2.3rem; }
+.sub { color: var(--muted); margin: 6px 0 0; }
+
+/* Boutons et champs */
+.btn { cursor: pointer; font-weight: 600; border-radius: 999px; padding: 10px 18px; background: var(--accent); color: var(--accent-fg); border: 1px solid var(--accent); }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+.btn.small { padding: 6px 14px; font-size: 0.9rem; }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+label, .lbl { display: block; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+input[type=text], input[type=date], input[type=search], textarea {
+  width: 100%; font: inherit; color: var(--fg); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+}
+input[type=date] { min-height: 46px; }
+textarea { min-height: 96px; resize: vertical; }
+.note { color: var(--muted); font-size: 0.9rem; margin: 0; }
+.err { color: var(--danger); margin: 0; min-height: 1.3em; font-size: 0.95rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { cursor: pointer; padding: 6px 14px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); }
+.chips button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+
+/* Bibliothèque */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 12px; }
+.book { background: none; border: 0; padding: 0; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.cvwrap { position: relative; }
+.cv { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 6px; box-shadow: var(--shadow); display: block; background: var(--line); }
+.cv.ph { display: grid; place-items: center; padding: 10px; color: #fff; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 1rem; line-height: 1.15; overflow: hidden; }
+.cv.ph span { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.badge { position: absolute; left: 6px; top: 6px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; padding: 2px 8px; border-radius: 999px; background: var(--paper); color: var(--fg); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); }
+.bstars svg { display: block; }
+.prog { height: 5px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.btitle { font-weight: 500; font-size: 0.88rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.bauthor { font-size: 0.78rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { text-align: center; color: var(--muted); padding: 32px 14px; border: 1px dashed var(--line); border-radius: 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+/* Étagère */
+.shelves { display: flex; flex-direction: column; gap: 26px; }
+.shelf { display: flex; align-items: flex-end; gap: 3px; padding: 0 4px; border-bottom: 9px solid var(--shelf); border-radius: 0 0 4px 4px; min-height: 130px; }
+.spine { flex: none; border: 0; padding: 6px 0; cursor: pointer; color: #fff; border-radius: 3px 3px 0 0; display: flex; justify-content: center; align-items: flex-start; overflow: hidden; box-shadow: inset -2px 0 0 rgba(0, 0, 0, 0.18); }
+.spine span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.03em; max-height: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spine.empty-slot { background: transparent; border: 1.5px solid var(--line); box-shadow: none; cursor: default; }
+.legend { color: var(--muted); font-size: 0.9rem; margin: 0; }
+
+/* Défi */
+.ringwrap { display: flex; align-items: center; gap: 20px; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 18px; }
+.ring { position: relative; width: 120px; height: 120px; flex: none; }
+.ring svg { width: 100%; height: 100%; }
+.ring .track { fill: none; stroke: var(--line); stroke-width: 10; }
+.ring .bar { fill: none; stroke: var(--accent); stroke-width: 10; stroke-linecap: round; }
+.ring .num { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1; }
+.ring .num small { display: block; font-family: var(--font-body); font-weight: 400; font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+.goalinfo { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.stepper { display: inline-flex; align-items: center; gap: 8px; }
+.stepper button { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; background: var(--paper); border: 1px solid var(--line); font-weight: 700; line-height: 1; }
+.stepper b { min-width: 1.6em; text-align: center; font-size: 1.1rem; }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.tile { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 12px; min-width: 0; }
+.tile .v { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1.1; }
+.tile .t { font-size: 0.78rem; color: var(--muted); }
+.months { display: flex; align-items: flex-end; gap: 6px; height: 120px; background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 12px 10px 8px; }
+.mcol { flex: 1; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }
+.mcol .n { font-size: 0.72rem; font-weight: 600; }
+.mcol .b { width: 100%; max-width: 22px; border-radius: 5px 5px 2px 2px; background: var(--accent); }
+.mcol .m { font-size: 0.7rem; color: var(--muted); }
+.yearrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+/* Barre du bas */
+#tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: center; pointer-events: none; padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+#tabbar .bar { pointer-events: auto; width: 100%; max-width: 420px; display: flex; align-items: center; justify-content: space-around; background: var(--paper); border: 1px solid var(--line); border-radius: 30px; padding: 8px 10px; box-shadow: var(--shadow); }
+.tab { background: none; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); padding: 2px 8px; }
+.tab svg { width: 24px; height: 24px; }
+.tab span { font-size: 0.7rem; font-weight: 500; }
+.tab[aria-pressed="true"] { color: var(--accent); }
+.fab { width: 54px; height: 54px; border-radius: 50%; border: 0; cursor: pointer; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; margin-top: -26px; box-shadow: var(--shadow); flex: none; }
+.fab svg { width: 26px; height: 26px; }
+
+/* Fiche d'un livre */
+#sheet { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: env(safe-area-inset-top, 0px); }
+.sheetbar { position: sticky; top: 0; z-index: 2; background: var(--bg); display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); }
+.sheetbar h2 { font-size: 1.3rem; }
+.sheetbody { max-width: 560px; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-right, 0px)) 80px max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 16px; }
+.headrow { display: flex; gap: 16px; align-items: flex-start; }
+.coverbox { flex: none; width: 112px; display: flex; flex-direction: column; gap: 8px; }
+.coverbox .cv { width: 112px; }
+.fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rating { display: inline-block; width: 190px; max-width: 100%; cursor: pointer; touch-action: manipulation; }
+.rating svg { display: block; width: 100%; height: auto; }
+.results { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 8px; }
+.results:empty { display: none; }
+.res { flex: none; width: 82px; background: none; border: 2px solid transparent; border-radius: 10px; padding: 3px; cursor: pointer; text-align: left; }
+.res:hover { border-color: var(--accent); }
+.res img { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 6px; display: block; background: var(--line); }
+.res small { display: block; font-size: 0.7rem; line-height: 1.2; margin-top: 3px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.sw { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--line); cursor: pointer; padding: 0; }
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--fg); }
+.sectionlbl { font-family: var(--font-display); font-size: 1.35rem; font-weight: 700; margin: 0 0 2px; }
+
+@media (max-width: 380px) { .headrow { flex-direction: column; } .coverbox { flex-direction: row; width: 100%; align-items: flex-end; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top" id="top"></header>
+  <main id="view"></main>
+</div>
+
+<nav id="tabbar" aria-label="Navigation">
+  <div class="bar">
+    <button class="tab" type="button" data-v="lib" aria-label="Bibliothèque"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><span>Bibliothèque</span></button>
+    <button class="tab" type="button" data-v="shelf" aria-label="Étagère"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V8M9 20V5M13 20V9M17 20l3-11M3 20h18"/></svg><span>Étagère</span></button>
+    <button class="fab" type="button" id="fab" aria-label="Ajouter un livre"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="tab" type="button" data-v="goal" aria-label="Défi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg><span>Défi</span></button>
+  </div>
+</nav>
+
+<div id="sheet" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "livres-items", KEY_SET = "livres-settings";
+  var PALETTE = ["#c8553c", "#d98a1e", "#2f6e55", "#3a5f93", "#8a5a9a", "#d0607a", "#5b7f6a", "#9a6b2f", "#4b4f8a", "#a8432a"];
+  var FORMATS = [["papier", "Papier"], ["audio", "Audio"], ["liseuse", "Liseuse"]];
+  var STATUS = [["alire", "À lire"], ["encours", "En cours"], ["termine", "Terminé"]];
+  var STATUS_LABEL = { alire: "À lire", encours: "En cours", termine: "Terminé" };
+  var MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+
+  var items = [], settings = { goal: 24 };
+  var view = "lib", filter = "all", query = "", year = new Date().getFullYear();
+  var gradId = 0;
+
+  function $(id) { return document.getElementById(id); }
+  function h(tag, props, kids) {
+    var n = document.createElement(tag);
+    if (props) Object.keys(props).forEach(function (k) {
+      var v = props[k];
+      if (v === false || v == null) return;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k === "html") n.innerHTML = v;
+      else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : v);
+    });
+    (kids || []).forEach(function (c) {
+      if (c == null || c === false) return;
+      n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    });
+    return n;
+  }
+  function hash(s) { var x = 7; for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 100003; return x; }
+  function uid() { return "b" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function isoDate(ts) { var d = new Date(ts); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function today() { return isoDate(Date.now()); }
+  function finishedDate(it) { return it.endDate || isoDate(it.createdAt || Date.now()); }
+  function num(v) { var n = parseInt(v, 10); return n > 0 ? n : 0; }
+
+  // --- Sauvegarde
+  var storageOk = true;
+  function load() {
+    try { var v = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(v)) items = v; } catch (e) {}
+    try { var s = JSON.parse(localStorage.getItem(KEY_SET)); if (s && s.goal > 0) settings = s; } catch (e) {}
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(items)); localStorage.setItem(KEY_SET, JSON.stringify(settings)); storageOk = true; }
+    catch (e) { storageOk = false; }
+  }
+
+  // --- Étoiles (demi-étoiles comprises)
+  function starsSvg(value, px) {
+    var id = "sg" + (++gradId), defs = "", body = "";
+    for (var i = 0; i < 5; i++) {
+      var f = Math.max(0, Math.min(1, value - i));
+      defs += '<linearGradient id="' + id + i + '" x1="0" x2="1" y1="0" y2="0"><stop offset="' + f + '" style="stop-color:var(--star)"/><stop offset="' + f + '" style="stop-color:var(--star-off)"/></linearGradient>';
+      body += '<path transform="translate(' + (i * 24) + ' 0)" fill="url(#' + id + i + ')" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/>';
+    }
+    return '<svg viewBox="0 0 120 24" width="' + (px * 5) + '" height="' + px + '" aria-hidden="true"><defs>' + defs + "</defs>" + body + "</svg>";
+  }
+  function ratingControl(value, onChange) {
+    var box = h("div", { class: "rating", role: "slider", tabindex: "0", "aria-label": "Note sur 5", "aria-valuemin": "0", "aria-valuemax": "5", "aria-valuenow": String(value), "aria-valuetext": value + " sur 5" });
+    box.innerHTML = starsSvg(value, 36);
+    box.addEventListener("click", function (e) {
+      var r = box.getBoundingClientRect();
+      var v = Math.max(0.5, Math.min(5, Math.ceil(((e.clientX - r.left) / r.width) * 10) / 2));
+      onChange(v === value ? 0 : v);
+    });
+    box.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "ArrowUp") { e.preventDefault(); onChange(Math.min(5, value + 0.5)); }
+      if (e.key === "ArrowLeft" || e.key === "ArrowDown") { e.preventDefault(); onChange(Math.max(0, value - 0.5)); }
+    });
+    return box;
+  }
+
+  // --- Navigation
+  function setView(v) { view = v; render(); window.scrollTo(0, 0); }
+  function drawTabs() {
+    var tabs = document.querySelectorAll("#tabbar .tab");
+    for (var i = 0; i < tabs.length; i++) tabs[i].setAttribute("aria-pressed", tabs[i].getAttribute("data-v") === view ? "true" : "false");
+  }
+  function render() {
+    drawTabs();
+    var top = $("top"), main = $("view");
+    top.textContent = "";
+    main.textContent = "";
+    var year0 = new Date().getFullYear();
+    if (view === "lib") {
+      top.appendChild(h("p", { class: "kicker", text: "Mon journal de lecture" }));
+      top.appendChild(h("h1", { text: "Ma bibliothèque" }));
+      var done = items.filter(function (b) { return b.status === "termine"; }).length;
+      top.appendChild(h("p", { class: "sub", text: items.length + (items.length > 1 ? " livres" : " livre") + " · " + done + (done > 1 ? " terminés" : " terminé") }));
+      renderLib(main);
+    } else if (view === "shelf") {
+      top.appendChild(h("p", { class: "kicker", text: "Mon journal de lecture" }));
+      top.appendChild(h("h1", { text: "Mon étagère" }));
+      renderShelf(main);
+    } else {
+      top.appendChild(h("p", { class: "kicker", text: "Mon journal de lecture" }));
+      top.appendChild(h("h1", { text: "Mon défi lecture" }));
+      renderGoal(main, year0);
+    }
+  }
+
+  // --- Bibliothèque
+  function matches(b) {
+    if (filter !== "all" && b.status !== filter) return false;
+    if (!query) return true;
+    return ((b.title || "") + " " + (b.author || "")).toLowerCase().indexOf(query) !== -1;
+  }
+  function bookCard(b) {
+    var cvwrap = h("div", { class: "cvwrap" });
+    if (b.cover) cvwrap.appendChild(h("img", { class: "cv", src: b.cover, alt: "Couverture de " + b.title }));
+    else cvwrap.appendChild(h("div", { class: "cv ph", style: "background:" + (b.color || PALETTE[0]) }, [h("span", { text: b.title })]));
+    if (b.status !== "termine") cvwrap.appendChild(h("span", { class: "badge", text: STATUS_LABEL[b.status] || "" }));
+    var kids = [cvwrap];
+    if (b.status === "termine" && b.rating > 0) {
+      var st = h("div", { class: "bstars", "aria-label": "Note : " + b.rating + " sur 5" });
+      st.innerHTML = starsSvg(b.rating, 13);
+      kids.push(st);
+    }
+    if (b.status === "encours" && b.pages > 0 && b.pagesRead > 0) {
+      kids.push(h("div", { class: "prog", "aria-label": "Avancement" }, [h("i", { style: "width:" + Math.min(100, Math.round(b.pagesRead / b.pages * 100)) + "%" })]));
+    }
+    kids.push(h("div", { class: "btitle", text: b.title }));
+    if (b.author) kids.push(h("div", { class: "bauthor", text: b.author }));
+    return h("button", { class: "book", type: "button", onclick: function () { openEditor(b); } }, kids);
+  }
+  function renderLib(main) {
+    var chips = h("div", { class: "chips", role: "group", "aria-label": "Statut" });
+    [["all", "Tous"], ["alire", "À lire"], ["encours", "En cours"], ["termine", "Terminés"]].forEach(function (p) {
+      chips.appendChild(h("button", { type: "button", text: p[1], "aria-pressed": filter === p[0] ? "true" : "false", onclick: function () { filter = p[0]; render(); } }));
+    });
+    var search = h("input", { type: "search", id: "q", placeholder: "Chercher un titre ou un auteur", "aria-label": "Chercher un titre ou un auteur", autocomplete: "off" });
+    search.value = query;
+    var grid = h("div", { class: "grid" });
+    function drawGrid() {
+      grid.textContent = "";
+      var shown = items.filter(matches).sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+      if (!shown.length) {
+        grid.style.display = "block";
+        grid.appendChild(h("div", { class: "empty" }, [
+          h("span", { text: items.length ? "Aucun livre dans cette sélection." : "Ta bibliothèque est vide. Ajoute ton premier livre." }),
+          items.length ? null : h("button", { class: "btn", type: "button", text: "Ajouter un livre", onclick: function () { openEditor(null); } })
+        ]));
+        return;
+      }
+      grid.style.display = "";
+      shown.forEach(function (b) { grid.appendChild(bookCard(b)); });
+    }
+    search.addEventListener("input", function () { query = search.value.trim().toLowerCase(); drawGrid(); });
+    main.appendChild(h("div", { style: "display:flex;flex-direction:column;gap:14px" }, [chips, search, grid]));
+    drawGrid();
+    if (!storageOk) main.appendChild(h("p", { class: "note", text: "Impossible d'enregistrer ici (mémoire pleine ou navigation privée). Tes derniers ajouts risquent de disparaître." }));
+  }
+
+  // --- Étagère
+  function spineDims(b, i) {
+    var p = b && b.pages ? b.pages : 280, v = hash((b ? b.title : "x") + i) % 14;
+    return { w: Math.max(18, Math.min(34, Math.round(16 + p / 32))), h: Math.max(112, Math.min(168, Math.round(100 + p / 7))) + v };
+  }
+  function renderShelf(main) {
+    var cy = new Date().getFullYear();
+    var books = items.filter(function (b) { return b.status === "termine" || b.status === "encours"; })
+      .sort(function (a, b) { return finishedDate(a).localeCompare(finishedDate(b)); });
+    var doneThisYear = items.filter(function (b) { return b.status === "termine" && finishedDate(b).slice(0, 4) === String(cy); }).length;
+    var empties = Math.min(60, Math.max(0, settings.goal - doneThisYear));
+    var slots = books.map(function (b, i) { var d = spineDims(b, i); return { book: b, w: d.w, h: d.h }; });
+    for (var e = 0; e < empties; e++) slots.push({ book: null, w: 20 + (e % 3) * 4, h: 118 + ((e * 17) % 40) });
+
+    if (!slots.length) {
+      main.appendChild(h("div", { class: "empty" }, [
+        h("span", { text: "Ton étagère est vide. Ajoute un livre en cours ou terminé pour voir sa tranche." }),
+        h("button", { class: "btn", type: "button", text: "Ajouter un livre", onclick: function () { openEditor(null); } })
+      ]));
+      return;
+    }
+    var avail = Math.max(200, main.clientWidth - 8 || ($("view").clientWidth - 8));
+    var wrap = h("div", { class: "shelves" });
+    var shelf = null, used = 0;
+    slots.forEach(function (s) {
+      if (!shelf || used + s.w + 3 > avail) { shelf = h("div", { class: "shelf" }); wrap.appendChild(shelf); used = 0; }
+      used += s.w + 3;
+      var el;
+      if (s.book) {
+        el = h("button", { class: "spine", type: "button", title: s.book.title, "aria-label": s.book.title, style: "width:" + s.w + "px;height:" + s.h + "px;background:" + (s.book.color || PALETTE[0]), onclick: function () { openEditor(s.book); } }, [h("span", { text: s.book.title })]);
+      } else {
+        el = h("div", { class: "spine empty-slot", "aria-hidden": "true", style: "width:" + s.w + "px;height:" + s.h + "px" });
+      }
+      shelf.appendChild(el);
+    });
+    main.appendChild(wrap);
+    main.appendChild(h("p", { class: "legend", text: empties > 0
+      ? books.length + " livre" + (books.length > 1 ? "s" : "") + " sur l'étagère. Les tranches vides sont les " + empties + " livres qu'il te reste à lire pour ton défi " + cy + "."
+      : books.length + " livre" + (books.length > 1 ? "s" : "") + " sur l'étagère. Défi " + cy + " atteint, bravo !" }));
+  }
+
+  // --- Défi
+  function renderGoal(main, cy) {
+    var fin = items.filter(function (b) { return b.status === "termine" && finishedDate(b).slice(0, 4) === String(year); });
+    var count = fin.length, goal = settings.goal;
+    var pct = Math.min(1, count / goal);
+    var circ = 2 * Math.PI * 52;
+    var pages = fin.reduce(function (s, b) { return s + (b.pages || 0); }, 0);
+    var rated = fin.filter(function (b) { return b.rating > 0; });
+    var avg = rated.length ? rated.reduce(function (s, b) { return s + b.rating; }, 0) / rated.length : null;
+    var doing = items.filter(function (b) { return b.status === "encours"; }).length;
+
+    var yearRow = h("div", { class: "yearrow" }, [
+      h("div", { class: "stepper" }, [
+        h("button", { type: "button", "aria-label": "Année précédente", text: "‹", onclick: function () { year--; render(); } }),
+        h("b", { text: String(year) }),
+        h("button", { type: "button", "aria-label": "Année suivante", text: "›", onclick: function () { year++; render(); } })
+      ]),
+      h("span", { class: "note", text: year === cy ? "Cette année" : "" })
+    ]);
+
+    var ring = h("div", { class: "ring", role: "img", "aria-label": count + " livres lus sur " + goal });
+    ring.innerHTML = '<svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="52"/><circle class="bar" cx="60" cy="60" r="52" transform="rotate(-90 60 60)" stroke-dasharray="' + circ.toFixed(2) + '" stroke-dashoffset="' + (circ * (1 - pct)).toFixed(2) + '"/></svg>';
+    ring.appendChild(h("div", { class: "num" }, [h("div", null, [document.createTextNode(count + " / " + goal), h("small", { text: "livres lus" })])]));
+    var goalInfo = h("div", { class: "goalinfo" }, [
+      h("div", { class: "lbl", text: "Mon objectif " + year }),
+      h("div", { class: "stepper" }, [
+        h("button", { type: "button", "aria-label": "Un livre de moins", text: "−", onclick: function () { settings.goal = Math.max(1, settings.goal - 1); save(); render(); } }),
+        h("b", { text: String(goal) }),
+        h("button", { type: "button", "aria-label": "Un livre de plus", text: "+", onclick: function () { settings.goal = Math.min(365, settings.goal + 1); save(); render(); } })
+      ]),
+      h("p", { class: "note", text: count >= goal ? "Objectif atteint, bravo !" : "Encore " + (goal - count) + " livre" + (goal - count > 1 ? "s" : "") + " à lire." })
+    ]);
+
+    var tiles = h("div", { class: "tiles" }, [
+      h("div", { class: "tile" }, [h("div", { class: "v", text: pages ? pages.toLocaleString("fr-FR") : "0" }), h("div", { class: "t", text: "pages lues" })]),
+      h("div", { class: "tile" }, [h("div", { class: "v", text: avg === null ? "—" : avg.toFixed(1).replace(".", ",") }), h("div", { class: "t", text: "note moyenne" })]),
+      h("div", { class: "tile" }, [h("div", { class: "v", text: String(doing) }), h("div", { class: "t", text: "en cours" })])
+    ]);
+
+    var perMonth = []; for (var m = 0; m < 12; m++) perMonth.push(0);
+    fin.forEach(function (b) { var mm = parseInt(finishedDate(b).slice(5, 7), 10) - 1; if (mm >= 0 && mm < 12) perMonth[mm]++; });
+    var max = Math.max(1, Math.max.apply(null, perMonth));
+    var months = h("div", { class: "months", role: "img", "aria-label": "Livres terminés par mois" });
+    perMonth.forEach(function (c, i) {
+      months.appendChild(h("div", { class: "mcol" }, [
+        h("span", { class: "n", text: c ? String(c) : "" }),
+        h("div", { class: "b", style: "height:" + (c ? Math.max(8, Math.round(c / max * 62)) : 3) + "px;" + (c ? "" : "opacity:.25") }),
+        h("span", { class: "m", text: MONTHS[i] })
+      ]));
+    });
+
+    main.appendChild(h("div", { style: "display:flex;flex-direction:column;gap:16px" }, [
+      yearRow,
+      h("div", { class: "ringwrap" }, [ring, goalInfo]),
+      tiles,
+      h("h3", { class: "sectionlbl", text: "Livres terminés par mois" }),
+      months
+    ]));
+  }
+
+  // --- Couverture : photo, recherche, réduction de taille
+  function loadImage(src, cors) {
+    return new Promise(function (resolve, reject) {
+      var im = new Image();
+      if (cors) im.crossOrigin = "anonymous";
+      im.onload = function () { resolve(im); };
+      im.onerror = function () { reject(new Error("image")); };
+      im.src = src;
+    });
+  }
+  function resizeToDataUrl(im) {
+    var max = 420, w = im.naturalWidth || im.width, hh = im.naturalHeight || im.height;
+    var k = Math.min(1, max / Math.max(w, hh));
+    var c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(w * k));
+    c.height = Math.max(1, Math.round(hh * k));
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.82);
+  }
+  function searchBooks(q) {
+    return fetch("https://openlibrary.org/search.json?q=" + encodeURIComponent(q) + "&limit=12&fields=title,author_name,cover_i,number_of_pages_median")
+      .then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); })
+      .then(function (d) {
+        return (d.docs || []).filter(function (x) { return x.cover_i; }).map(function (x) {
+          return { url: "https://covers.openlibrary.org/b/id/" + x.cover_i + "-M.jpg", title: x.title || "", author: (x.author_name && x.author_name[0]) || "", pages: x.number_of_pages_median || 0 };
+        });
+      });
+  }
+
+  // --- Fiche d'un livre (ajout et modification)
+  function openEditor(b) {
+    var isNew = !b;
+    var d = b ? Object.assign({}, b) : { status: "encours", format: "papier", rating: 0, cover: "", startDate: today() };
+    if (!d.color) d.color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    var confirmDel = false;
+    var sheet = $("sheet");
+    sheet.textContent = "";
+    sheet.hidden = false;
+    document.body.style.overflow = "hidden";
+
+    var f = {}; // références vers les champs
+    function field(labelText, input, id) { var l = h("label", { for: id, text: labelText }); input.id = id; return h("div", null, [l, input]); }
+    f.title = h("input", { type: "text", autocomplete: "off" }); f.title.value = d.title || "";
+    f.author = h("input", { type: "text", autocomplete: "off" }); f.author.value = d.author || "";
+    f.genre = h("input", { type: "text", autocomplete: "off", placeholder: "Roman, fantasy, policier…" }); f.genre.value = d.genre || "";
+    f.start = h("input", { type: "date" }); f.start.value = d.startDate || "";
+    f.end = h("input", { type: "date" }); f.end.value = d.endDate || "";
+    f.pages = h("input", { type: "text", inputmode: "numeric", autocomplete: "off" }); f.pages.value = d.pages ? String(d.pages) : "";
+    f.pagesRead = h("input", { type: "text", inputmode: "numeric", autocomplete: "off" }); f.pagesRead.value = d.pagesRead ? String(d.pagesRead) : "";
+    f.summary = h("textarea"); f.summary.value = d.summary || "";
+    f.review = h("textarea"); f.review.value = d.review || "";
+    f.quotes = h("textarea", { placeholder: "Une citation par ligne" }); f.quotes.value = d.quotes || "";
+    f.tropes = h("input", { type: "text", autocomplete: "off", placeholder: "Séparés par des virgules" }); f.tropes.value = d.tropes || "";
+    var err = h("p", { class: "err", role: "alert" });
+
+    // Couverture
+    var coverBox = h("div", { class: "coverbox" });
+    var coverMsg = h("p", { class: "note", role: "status" });
+    var results = h("div", { class: "results" });
+    var fileIn = h("input", { type: "file", accept: "image/*", hidden: true });
+    function drawCover() {
+      coverBox.textContent = "";
+      if (d.cover) coverBox.appendChild(h("img", { class: "cv", src: d.cover, alt: "Couverture" }));
+      else coverBox.appendChild(h("div", { class: "cv ph", style: "background:" + d.color }, [h("span", { text: f.title.value.trim() || "Titre" })]));
+      coverBox.appendChild(h("button", { class: "btn small ghost", type: "button", text: d.cover ? "Changer la photo" : "Choisir une photo", onclick: function () { fileIn.click(); } }));
+      if (d.cover) coverBox.appendChild(h("button", { class: "btn small ghost", type: "button", text: "Retirer", onclick: function () { d.cover = ""; drawCover(); } }));
+    }
+    fileIn.addEventListener("change", function () {
+      var file = fileIn.files && fileIn.files[0];
+      if (!file) return;
+      var url = URL.createObjectURL(file);
+      loadImage(url, false)
+        .then(function (im) { d.cover = resizeToDataUrl(im); coverMsg.textContent = ""; drawCover(); })
+        .catch(function () { coverMsg.textContent = "Cette photo ne peut pas être lue. Essaie-en une autre."; })
+        .then(function () { URL.revokeObjectURL(url); fileIn.value = ""; });
+    });
+    function pick(r) {
+      results.textContent = "";
+      coverMsg.textContent = "Je récupère l'image…";
+      if (!f.title.value.trim()) f.title.value = r.title;
+      if (!f.author.value.trim() && r.author) f.author.value = r.author;
+      if (!f.pages.value.trim() && r.pages) f.pages.value = String(r.pages);
+      loadImage(r.url, true)
+        .then(function (im) { d.cover = resizeToDataUrl(im); })
+        .catch(function () { d.cover = r.url; })
+        .then(function () { coverMsg.textContent = ""; drawCover(); });
+    }
+    function doSearch() {
+      var q = (f.title.value + " " + f.author.value).trim();
+      if (!q) { coverMsg.textContent = "Écris d'abord le titre, puis appuie sur « Chercher le livre »."; f.title.focus(); return; }
+      coverMsg.textContent = "Recherche en cours…";
+      results.textContent = "";
+      searchBooks(q).then(function (list) {
+        var seen = {};
+        list = list.filter(function (r) { if (seen[r.url]) return false; seen[r.url] = 1; return true; });
+        if (!list.length) { coverMsg.textContent = "Aucun livre trouvé. Tu peux choisir une photo de ton téléphone."; return; }
+        coverMsg.textContent = "Touche ton livre pour remplir la fiche.";
+        list.forEach(function (r) {
+          var img = h("img", { src: r.url, alt: r.title });
+          results.appendChild(h("button", { class: "res", type: "button", title: r.title + (r.author ? " — " + r.author : ""), onclick: function () { pick(r); } }, [img, h("small", { text: r.title })]));
+        });
+      }).catch(function () {
+        coverMsg.textContent = "Impossible de chercher pour le moment (pas de connexion ?). Tu peux choisir une photo de ton téléphone.";
+      });
+    }
+
+    // Statut, format, note, couleur
+    var statusBox = h("div", { class: "chips", role: "group", "aria-label": "Statut" });
+    var formatBox = h("div", { class: "chips", role: "group", "aria-label": "Format" });
+    var ratingBox = h("div");
+    var swBox = h("div", { class: "swatches", role: "group", "aria-label": "Couleur de la tranche" });
+    var readWrap = h("div");
+    function drawStatus() {
+      statusBox.textContent = "";
+      STATUS.forEach(function (p) {
+        statusBox.appendChild(h("button", { type: "button", text: p[1], "aria-pressed": d.status === p[0] ? "true" : "false", onclick: function () {
+          d.status = p[0];
+          if (p[0] === "termine" && !f.end.value) f.end.value = today();
+          if (p[0] === "encours" && !f.start.value) f.start.value = today();
+          drawStatus();
+        } }));
+      });
+      readWrap.hidden = d.status !== "encours";
+    }
+    function drawFormat() {
+      formatBox.textContent = "";
+      FORMATS.forEach(function (p) {
+        formatBox.appendChild(h("button", { type: "button", text: p[1], "aria-pressed": d.format === p[0] ? "true" : "false", onclick: function () { d.format = p[0]; drawFormat(); } }));
+      });
+    }
+    function drawRating() {
+      ratingBox.textContent = "";
+      ratingBox.appendChild(ratingControl(d.rating || 0, function (v) { d.rating = v; drawRating(); }));
+    }
+    function drawSwatches() {
+      swBox.textContent = "";
+      PALETTE.forEach(function (c) {
+        swBox.appendChild(h("button", { class: "sw", type: "button", style: "background:" + c, "aria-label": "Couleur " + c, "aria-pressed": d.color === c ? "true" : "false", onclick: function () { d.color = c; drawSwatches(); if (!d.cover) drawCover(); } }));
+      });
+    }
+    readWrap.appendChild(field("Pages lues", f.pagesRead, "f-pagesread"));
+
+    // Enregistrer, supprimer
+    function close() { sheet.hidden = true; sheet.textContent = ""; document.body.style.overflow = ""; }
+    function saveBook() {
+      var title = f.title.value.trim();
+      if (!title) { err.textContent = "Écris le titre du livre."; f.title.focus(); return; }
+      err.textContent = "";
+      d.title = title;
+      d.author = f.author.value.trim();
+      d.genre = f.genre.value.trim();
+      d.startDate = f.start.value;
+      d.endDate = f.end.value;
+      d.pages = num(f.pages.value);
+      d.pagesRead = d.status === "encours" ? num(f.pagesRead.value) : 0;
+      d.summary = f.summary.value.trim();
+      d.review = f.review.value.trim();
+      d.quotes = f.quotes.value.trim();
+      d.tropes = f.tropes.value.trim();
+      if (d.status === "termine" && !d.endDate) d.endDate = today();
+      if (isNew) { d.id = uid(); d.createdAt = Date.now(); items.push(d); }
+      else items = items.map(function (x) { return x.id === d.id ? d : x; });
+      save();
+      close();
+      render();
+    }
+    var delWrap = h("div");
+    function drawDelete() {
+      delWrap.textContent = "";
+      if (isNew) return;
+      if (!confirmDel) {
+        delWrap.appendChild(h("button", { class: "btn small danger", type: "button", text: "Supprimer ce livre", onclick: function () { confirmDel = true; drawDelete(); } }));
+      } else {
+        delWrap.appendChild(h("span", { class: "note", text: "Supprimer pour de bon ? " }));
+        delWrap.appendChild(h("button", { class: "btn small danger", type: "button", text: "Oui, supprimer", onclick: function () { items = items.filter(function (x) { return x.id !== d.id; }); save(); close(); render(); } }));
+        delWrap.appendChild(document.createTextNode(" "));
+        delWrap.appendChild(h("button", { class: "btn small ghost", type: "button", text: "Annuler", onclick: function () { confirmDel = false; drawDelete(); } }));
+      }
+    }
+
+    var bar = h("div", { class: "sheetbar" }, [
+      h("button", { class: "btn small ghost", type: "button", text: "Fermer", onclick: close }),
+      h("h2", { text: isNew ? "Nouveau livre" : "Fiche de lecture" }),
+      h("button", { class: "btn small", type: "button", text: "Enregistrer", onclick: saveBook })
+    ]);
+    var findBtn = h("button", { class: "btn small ghost", type: "button", text: "Chercher le livre", onclick: doSearch });
+    var body = h("div", { class: "sheetbody" }, [
+      h("div", { class: "headrow" }, [
+        coverBox,
+        h("div", { class: "fields" }, [field("Titre", f.title, "f-title"), field("Auteur", f.author, "f-author"), field("Genre", f.genre, "f-genre"), findBtn])
+      ]),
+      results, coverMsg, fileIn,
+      h("div", null, [h("span", { class: "lbl", text: "Statut" }), statusBox]),
+      h("div", { class: "two" }, [field("Début", f.start, "f-start"), field("Fin", f.end, "f-end")]),
+      h("div", { class: "two" }, [field("Pages", f.pages, "f-pages"), readWrap]),
+      h("div", null, [h("span", { class: "lbl", text: "Format" }), formatBox]),
+      h("div", null, [h("span", { class: "lbl", text: "Ma note" }), ratingBox]),
+      field("Résumé", f.summary, "f-summary"),
+      field("Mon avis", f.review, "f-review"),
+      field("Citations", f.quotes, "f-quotes"),
+      field("Tropes", f.tropes, "f-tropes"),
+      h("div", null, [h("span", { class: "lbl", text: "Couleur de la tranche" }), swBox]),
+      err,
+      h("div", { style: "display:flex;gap:12px;flex-wrap:wrap;align-items:center" }, [
+        h("button", { class: "btn", type: "button", text: "Enregistrer", onclick: saveBook }),
+        delWrap
+      ])
+    ]);
+    sheet.appendChild(bar);
+    sheet.appendChild(body);
+    f.title.addEventListener("input", function () { if (!d.cover) drawCover(); });
+    drawCover(); drawStatus(); drawFormat(); drawRating(); drawSwatches(); drawDelete();
+    sheet.scrollTop = 0;
+    if (isNew) f.title.focus({ preventScroll: true });
+  }
+
+  // --- Démarrage
+  var tabs = document.querySelectorAll("#tabbar .tab");
+  for (var i = 0; i < tabs.length; i++) {
+    (function (t) { t.addEventListener("click", function () { setView(t.getAttribute("data-v")); }); })(tabs[i]);
+  }
+  $("fab").addEventListener("click", function () { openEditor(null); });
+  var resizeTimer = null;
+  window.addEventListener("resize", function () {
+    if (view !== "shelf") return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(render, 150);
+  });
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  }
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
