@@ -108,6 +108,22 @@ body{background:radial-gradient(ellipse at 20% 0%,#fffaf1 0%,var(--cream) 54%,#f
     margin-right: 35px;
   }
 }
+
+/* Recherche de livre par ISBN / titre (Google Books) */
+.isbn-search-box{margin-bottom:13px}
+.isbn-search-row{display:flex;gap:8px}
+.isbn-search-row input{flex:1;min-width:0;border:1px solid var(--line);background:#fffdf8;border-radius:12px;padding:12px;color:var(--ink)}
+.isbn-search-row .secondary{flex:none}
+#isbnResults{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.isbn-msg{font-size:.85rem;color:var(--muted);margin:2px 2px 0;line-height:1.5}
+.isbn-error{color:#a53d28}
+.isbn-result{display:flex;gap:11px;align-items:center;background:#fff9f0;border:1px solid #eadbc7;border-radius:14px;padding:9px 11px;text-align:left;color:var(--ink);box-shadow:0 4px 10px #493b2a0d;transition:transform .15s,box-shadow .15s}
+.isbn-result:hover{transform:translateY(-1px);box-shadow:0 7px 14px #493b2a17}
+.isbn-thumb{width:44px;height:64px;flex:none;object-fit:cover;border-radius:4px 6px 6px 4px;box-shadow:2px 3px 6px #44362633;display:grid;place-items:center;background:var(--forest);color:#f6e7d2;font-size:1.2rem}
+.isbn-meta{display:flex;flex-direction:column;gap:2px;min-width:0}
+.isbn-meta strong{font:600 .95rem var(--serif);overflow-wrap:anywhere}
+.isbn-meta span{font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}
+.isbn-ids{font-size:.72rem!important;color:#a08d6e!important}
 </style>
 </head>
 <body>
@@ -134,6 +150,7 @@ body{background:radial-gradient(ellipse at 20% 0%,#fffaf1 0%,var(--cream) 54%,#f
     <div class="modal-head"><h2 id="modalTitle">Ajouter un livre</h2><button class="close" id="closeModal" aria-label="Fermer">×</button></div>
     <form id="bookForm">
       <input type="hidden" id="bookId">
+      <div class="field full isbn-search-box"><label for="isbnSearch">Rechercher un livre par ISBN ou par titre</label><div class="isbn-search-row"><input id="isbnSearch" type="search" placeholder="Ex. 9782070413244 ou Le Petit Prince" autocomplete="off"><button class="secondary" type="button" id="isbnSearchBtn">Rechercher</button></div><div id="isbnResults"></div></div>
       <div class="form-grid">
         <div class="field full"><label for="title">Titre du livre *</label><input id="title" required maxlength="120" placeholder="Le titre de ton livre"></div>
         <div class="field"><label for="author">Auteur</label><input id="author" maxlength="100" placeholder="Nom de l’auteur"></div>
@@ -194,6 +211,16 @@ function closeBook(){$("modalBackdrop").classList.remove("open")}
 $("bookForm").addEventListener("submit",e=>{e.preventDefault();const id=$("bookId").value||crypto.randomUUID();const old=state.books.find(b=>b.id===id);const status=$("status").value;const obj={id,title:$("title").value.trim(),author:$("author").value.trim(),status,pages:Number($("pages").value)||0,pagesRead:Number($("pagesRead").value)||0,rating:Number($("rating").value)||0,color:$("color").value,cover:$("cover").value.trim(),finished:$("finished").value||(status==="termine"?(old?.finished||today()):""),shelf:$("shelf").value,notes:$("notes").value,favorite:old?.favorite||false,created:old?.created||today(),updated:new Date().toISOString()};if(obj.pages&&obj.pagesRead>obj.pages)obj.pagesRead=obj.pages;if(status==="termine"&&!obj.finished)obj.finished=today();if(status!=="termine"&&!$("finished").value)obj.finished="";if(old)state.books=state.books.map(b=>b.id===id?obj:b);else state.books.unshift(obj);save();closeBook();render();toast(old?"Livre mis à jour ♡":"Livre ajouté à ta bibliothèque ♡");});
 $("deleteBook").addEventListener("click",()=>{const id=$("bookId").value;if(!id)return;if(confirm("Supprimer ce livre de ta bibliothèque ?")){state.books=state.books.filter(b=>b.id!==id);save();closeBook();render();toast("Livre supprimé");}});
 $("closeModal").onclick=closeBook;$("modalBackdrop").addEventListener("click",e=>{if(e.target===$("modalBackdrop"))closeBook()});
+let isbnAbort=null;let isbnResultsCache=[];
+function isbnQuery(q){const t=q.trim();if(!t)return t;const digits=t.replace(/[- ]/g,"");if(/^(97[89][- ]?\d{1,5}[- ]?\d+[- ]?\d+[- ]?[\dXx])$/.test(t)||/^\d{9}[\dXx]$/.test(digits)||/^\d{13}$/.test(digits))return "isbn:"+digits;return t;}
+function isbnThumb(vi){const t=(vi.imageLinks||{}).thumbnail||(vi.imageLinks||{}).smallThumbnail;return t?t.replace(/^http:/,"https:"):"";}
+function isbnIds(vi){return (vi.industryIdentifiers||[]).map(x=>x.identifier).join(" · ");}
+function isbnResultHTML(v,idx){const vi=v.volumeInfo||{};const thumb=isbnThumb(vi);return `<button type="button" class="isbn-result" data-idx="${idx}"><span class="isbn-thumb">${thumb?`<img src="${esc(thumb)}" alt="" loading="lazy" onerror="this.remove()">`:"▤"}</span><span class="isbn-meta"><strong>${esc(vi.title||"Sans titre")}${vi.subtitle?` — ${esc(vi.subtitle)}`:""}</strong><span>${esc((vi.authors||["Auteur inconnu"]).join(", "))}</span><span>${esc(vi.publisher||"Éditeur inconnu")}${vi.publishedDate?` · ${esc(String(vi.publishedDate).slice(0,4))}`:""}${vi.pageCount?` · ${vi.pageCount} pages`:""}</span><span class="isbn-ids">${esc(isbnIds(vi)||"ISBN non renseigné")}</span></span></button>`}
+function pickVolume(idx){const v=(isbnResultsCache||[])[idx];if(!v)return;const vi=v.volumeInfo||{};const put=(id,val)=>{const el=$(id);if(val&&!el.value.trim())el.value=val;};const title=(vi.title||"")+(vi.subtitle?". "+vi.subtitle:"");put("title",title.slice(0,120));put("author",(vi.authors||[]).join(", ").slice(0,100));if(vi.pageCount&&!$("pages").value)$("pages").value=vi.pageCount;const thumb=isbnThumb(vi);if(thumb&&!$("cover").value.trim())$("cover").value=thumb;$("isbnResults").innerHTML=`<p class="isbn-msg">Livre sélectionné : <strong>${esc(vi.title||"")}</strong>. Seuls les champs vides ont été remplis — complète le reste (statut, notes…), puis enregistre. ♡</p>`;$("isbnSearch").value="";$("title").focus();}
+async function isbnSearch(){const q=isbnQuery($("isbnSearch").value);const box=$("isbnResults");if(!q){box.innerHTML=`<p class="isbn-msg">Saisis un ISBN, un titre ou un auteur pour lancer la recherche.</p>`;return;}if(isbnAbort)isbnAbort.abort();isbnAbort=new AbortController();box.innerHTML=`<p class="isbn-msg">Recherche en cours…</p>`;$("isbnSearchBtn").disabled=true;try{const res=await fetch("https://www.googleapis.com/books/v1/volumes?maxResults=8&q="+encodeURIComponent(q),{signal:isbnAbort.signal});if(!res.ok)throw new Error(res.status===429?"quota":"http");const data=await res.json();const items=(data.items||[]).filter(v=>v.volumeInfo);isbnResultsCache=items;if(!items.length){box.innerHTML=`<p class="isbn-msg">Aucun livre trouvé pour cette recherche. Tu peux toujours ajouter ce livre manuellement avec le formulaire ci-dessous. ♡</p>`;return;}box.innerHTML=items.map((v,i)=>isbnResultHTML(v,i)).join("")+`<p class="isbn-msg">Choisis la bonne édition ci-dessus : les champs du formulaire seront remplis automatiquement (tu pourras toujours les corriger).</p>`;}catch(err){if(err.name==="AbortError")return;box.innerHTML=`<p class="isbn-msg isbn-error">Impossible de joindre le service de recherche pour le moment. Vérifie ta connexion, ou ajoute le livre manuellement avec le formulaire ci-dessous. ♡</p>`;}finally{$("isbnSearchBtn").disabled=false;}}
+$("isbnSearchBtn").addEventListener("click",isbnSearch);
+$("isbnSearch").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();isbnSearch();}});
+$("isbnResults").addEventListener("click",e=>{const b=e.target.closest(".isbn-result");if(b)pickVolume(Number(b.dataset.idx));});
 $("closeSettings").onclick=()=>$("settingsBackdrop").classList.remove("open");$("settingsBackdrop").addEventListener("click",e=>{if(e.target===$("settingsBackdrop"))$("settingsBackdrop").classList.remove("open")});
 $("settingsBtn").onclick=()=>{$("goalInput").value=state.goal;$("displayName").value=state.name;$("settingsBackdrop").classList.add("open")};
 $("saveSettings").onclick=()=>{state.goal=Math.max(1,Math.min(365,Number($("goalInput").value)||24));state.name=$("displayName").value.trim()||"Sumy";save();$("settingsBackdrop").classList.remove("open");render();toast("Paramètres enregistrés");};
